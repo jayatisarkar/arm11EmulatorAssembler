@@ -1,0 +1,170 @@
+\documentclass[11pt]{article}
+
+%% Language and font encodings
+\usepackage[english]{babel}
+\usepackage[utf8x]{inputenc}
+\usepackage[T1]{fontenc}
+
+%% Sets page size and margins
+\usepackage{fullpage}
+
+%% Useful packages
+\usepackage{amsmath}
+\usepackage{graphicx}
+\usepackage[colorinlistoftodos]{todonotes}
+\usepackage[colorlinks=true, allcolors=blue]{hyperref}
+
+\title{Final Report}
+\author{Inara Ramji, Jayati Sarkar, Yoon Kim and Diba Tavakolizadeh}
+
+\begin{document}
+\maketitle
+
+\section{Introduction}
+
+The assembler part of the project built upon what was done for the emulator, using as many of the common functions defined in \texttt{utils.c} as possible. Each instruction was completed by one individual and debugging was done mostly in pairs. With this higher level of efficiency and a greater understanding of the binary instructions, the assembler part of the project was finished in time and a great deal was learned regarding the implementation of data structures and string manipulation in C.
+
+\section{Structure of the Assembler}
+
+The assembly was performed in two passes as this was considered to be a more straightforward and efficient implementation that would allow for more readable code.
+
+\subsection{First Pass}
+
+For the first pass which was supposed to create a symbol table used for associating labels with memory addresses, a linked list was implemented using a struct called \texttt{labelMap} which contained:
+\begin{itemize}
+\item a character pointer to a label
+\item a 32 bit address (memory address corresponding to the label name)
+\item a pointer to the next \texttt{labelMap} struct
+\end{itemize}
+
+\subsection{Second Pass}
+
+For the second pass in which the opcode and operand field for each instruction are read and the corresponding binary encoding is generated, a struct called \texttt{opcodeMap} was used which contained:
+\begin{itemize}
+\item a character pointer to one of the 23 possible opcodes
+\item a function pointer which takes the character pointer to the instruction itself and the current address of the instruction that is being read from the file
+\end{itemize}
+
+\subsection{Implementation}
+
+The assembler used an unsigned 32-bit global variable called instr which held the binary value of the current instruction being processed. Each of the 23 opcodes had its own function which took the instruction being processed and the current address as parameters and returned the global variable instr after appropriately assigning its value. In the main, this instr variable was then written into an instruction array which held all the binary instructions that had been encoded so far. This instruction array, combined with the array of constant values from the single data transfer instruction, was then written to the output binary file.
+
+The challenge of working out how to append these constant values to the end of the file took some thought as it was originally thought that the instruction array should be implemented as a linked list so that the end of the list could be tracked and the constant values easily appended to the end. However, the implementation of another ADT felt unnecessary as the linked list would only be holding one variable so it was decided that a simple array structure would serve the required purpose and would lead to fewer problems during implementation.
+
+Throughout the assembler, the \texttt{strtok\_r} and \texttt{strtol} functions were frequently used to allow us to easily split the assembly instruction into various tokens so each token could be processed individually. Furthermore, as the assembler was implemented it was clear that there were similarities between each opcode function for a certain instruction which could be compiled into a more general function to reduce code duplication.
+
+\begin{table}
+\centering
+\begin{tabular}{p{4cm}|p{12cm}}
+File name & Purpose \\\hline
+\texttt{assemble.c} & Executes the assembler and includes functions used in the second pass of the assembler, such as \texttt{opcodeSymbolTable} which maps each opcode to its corresponding function pointer. \\
+\texttt{branch.c} & Handles the branch instructions of the assembler and contains a function \texttt{fillLabelMap} which executes the first pass of the assembler. \\
+\texttt{dataprocessing.c} & Handles the data processing instructions of the assembler for each opcode. \\
+\texttt{input.c} & Handles the writing of the instruction array to a binary file. \\
+\texttt{map.h} & Contains the structs required for the first (\texttt{labelMap}) and second (\texttt{opcodeMap}) pass of the assembler. \\
+\texttt{multiply.c} & Handles the multiply instructions of the assembler for each opcode. \\
+\texttt{singledatatransfer.c} & Handles the single data transfer instructions of the assembler for each opcode, detects writes to key memory addresses above and prints out when pins are enabled, disabled, turned on and turned off.
+  \\
+\texttt{utils.c} & Contains all the functions that are common to several instructions so they can be used throughout the program and duplicate code is avoided. \\
+\end{tabular}
+\caption{\label{tab:widgets}Files used in the assembler.}
+\end{table}
+
+\subsection{Work Delegation}
+
+\subsubsection{Yoon Kim}
+\begin{itemize}
+\item Completed and debugged the single data transfer instruction
+\item Led the group and contributed to the coding of other instructions where required
+\end{itemize}
+
+\subsubsection{Diba Tavakolizadeh}
+\begin{itemize}
+\item Completed and debugged the multiply instruction
+\item Helped to debug other instructions including single data transfer
+\end{itemize}
+
+\subsubsection{Inara Ramji}
+\begin{itemize}
+\item Completed and debugged the branch instruction
+\item Helped to write the assembly code and cleaned up the code
+\end{itemize}
+
+\subsubsection{Jayati Sarkar}
+\begin{itemize}
+\item Completed and debugged the data processing instruction
+\item Completed the extension of the emulator for GPIO and helped to write the assembly code
+\end{itemize}
+
+\section{GPIO on a Raspberry Pi}
+
+Using the provided ARM instruction set, an assembly language program was developed that repeatedly switches on and off the LED corresponding to GPIO pin 16. This was done by setting that pin as the output and creating two infinite loops using labels that created a delay between the flashes of the LED.
+
+\section{Extension}
+
+For the extension, a C program was created that would light up LEDs according to the notes of a song. Initially the idea of using a pitch recognition library such as aubio was discussed so the note being played could be identified and the corresponding LED would light up. However, as debugging the assembler took longer than expected there was not enough time to implement this complex an idea. Therefore, it was instead decided to light up LEDs to a particular "playlist" of songs.
+
+This C program could be used recreationally as a visual representation of music and with further development could be used to help deaf people interpret music through the medium of light.
+
+\subsection{Design}
+
+The extension involves lighting up 12 LEDs using 12 resistors in time to a playlist of 3 songs: "Twinkle Twinkle Little Star", "Jingle Bells" and "Baby". This was done using wiringPi (a PIN based GPIO access library written in C) instead of assembly (to reduce number of lines that would have to be written) and time delays which were hard coded into the program. Each LED represents a note in the song which will light up when played, thereby producing a kind of musical light show. 12 buttons have also been implemented which, when pressed, will produce a sound corresponding to the note acting as an electronic piano. There will also be 3 other buttons which will play each of the 3 songs in the "playlist" so the LEDs can light up in time with the each of the songs. The program also includes an interactive aspect that allows the user to choose which song in the playlist they would like to play.
+
+\subsubsection{Structure of the code}
+
+The extension is split into two aspects: the code required to light up the LEDs and the code required to play a sound when a button is pressed. The code required to light up the LEDs is in \texttt{blink.c} file. Each song was split into verses with functions for each verse and, within this, functions were created to represent a particular note (e.g. crotchet) whose timings were controlled using the delay function in wiringPi. Therefore, each song was built up note by note from a low to high level which allowed for easier testing and tweaking. The main also used the \texttt{scanf} function to allow the user to choose which of the songs they would like to play. This could be further optimised in the future to allow for added functionality such as a "shuffle songs" option which would play a random song.
+
+The code required to play a sound when a button is pressed for the piano is contained inside the \texttt{piano.py} file and the code for the buttons that play the songs is contained inside the \texttt{songs.py} file. The pygame library (an Open Source python library for making multimedia applications), in particular, the mixer module, which contains classes for loading sound objects and controlling playback, was used so a button could be programmed to produce a sound in minimal lines of code by creating Button objects.
+
+\subsection{Challenges}
+
+It was originally intended that the program would identify a note in the song and light up the corresponding LED. However, after thorough research it was decided that this would not be possible in the time left so the idea was simplified to hard coding time delays in order to make it appear as if the program itself was identifying notes.
+
+Issues arose in the wiring of the circuit as working out which GPIO pins should be used in order to light up a specific LED took time, especially as the numbers of the GPIO pins did not correspond to the same pin numbers in wiringPi. However, this was overcome by using a function inside the C program (\texttt{wiringPiSetupGpio}) which allowed us to focus on just the manufacturer's GPIO numbering system.
+
+An issue also arose when trying to play the MP3 files through the Raspberry Pi as a lot of complex code seemed to be required to play an MP3 file using C so a helper language such as Python was used to simplify the process, as this meant that libraries such as pygame could be used.
+
+\subsection{Testing}
+
+Testing of the program was carried out as the program was developed. This was necessary in order to make sure the LEDs kept to a strict timing pattern. Initially only one LED light was connected to the  breadboard and tested. The remaining 11 LEDs were then gradually added one by one to the circuit to make sure the circuit was connected correctly. A pattern was created using just 4 of the LEDs at first and this was then expanded to use all 12 LEDs to produce more complex displays. In this way, we built up the program in stages to avoid hours of debugging after the whole program has been written.
+The songs were also coded in verses so that testing could be carried out alongside the development of the code to allow for easier bug identification and tweaking of the timings.
+
+Although no explicit tests were written to test our code, the constant execution of our code and monitoring of the output allowed for a more basic yet still fairly rigorous method of verification. We therefore believe that this testing ended up being fairly effective but could have been improved, especially by allowing for more flexibility in the user input section of the program (e.g. allowing for misplaced capital letters).
+
+\section{Group Reflection}
+
+Overall, we believe that we managed to effectively communicate and split work between the group. After initially working in a group or in pairs for the emulator, we decided that it would be more efficient if we worked individually on separate parts of the program for the assembler. This resulted in faster development of our code and we definitely learned that this was a more effective way to approach group projects. However, we discovered that debugging in pairs is a better approach as small mistakes may be easily overlooked by one member of the team. We also found branching in git an extremely useful way to keep track of what each member of the group were working on and avoid any pushing of erroneous code to the master branch.
+
+Communication was definitely one of the main strengths of our group as we made sure we had set goals for each day and a long-term timeline which we successfully stuck to. It was also very useful that we agreed on a common style of code beforehand which helped us save time making the code style uniform, for example we agreed on indentation and spacing and that all hash-defines for each file should be declared in \texttt{utils.h}.
+
+Next time, we would try and split the work individually right from the very beginning which may have enabled us to finish parts 1 to 3 of the project earlier, thereby giving us more time for our extension. We would create branches for each member of the team, rather than just creating branches according to whenever we felt they were necessary. In this way, our git repository would have appeared to be a little more clear. However, overall we believe we worked well as a team and would keep our general approach and strategy (such as setting daily goals and agreeing to common coding standards) the same in future projects.
+
+\section{Individual Reflections}
+
+\subsection{Inara Ramji}
+
+I feel like overall we worked well as a group, partially owing to the fact that we knew each other well so communication between members of the group was always very easy and we were able to be honest with each other when something was not working or needed to be done. I initially had some reservations about the project as I was aware none of us had any prior knowledge of C which I thought would put us at a major disadvantage, but while this definitely made things more challenging it also meant that we learned a lot more throughout the project.
+
+I believe my role in the group was more of an organisational one as I, along with the others of my group, would decide and set realistic deadlines and daily goals which helped keep our team motivated and on track. Thus I believe my strengths within the group included helping to raise motivation and make sure tasks were completed on time. However, in trying to raise the motivation of my team I may have inadvertently put stress on the members of time when it was not necessary to do so, therefore in future group projects I will make a concerted effort to try to encourage my team more positively. Nevertheless, I would like to maintain the high level of communication and the daily goals we set which really helped us to achieve our aim.
+
+\subsection{Jayati Sarkar}
+
+I felt quite comfortable in doing this project as it was easy to communicate with the others and ask many questions along the way. Even though we had to face many obstacles as even a small error sometimes led to hours of debugging, I strongly believe that we were able to persevere because all the group members were always so motivated and kept pushing each other to not give up.
+As I do not have much experience of programming before and absolutely none in C, I thought that could turn out to be a big weakness. Fortunately, the project was focused more on trying to understand the spec and figuring out the problem and once we had done that, writing the code itself was not difficult.
+
+I am aware that sometimes I am not comfortable with putting forth my ideas and during the initial days of this project I think I was not too vocal about my opinions. However, as we have come to the end of this project, I realise that the sole purpose of a group project is sharing your ideas with your group members and coming up with the solutions together and now I know that for next time, I will actively try and make sure that I am communicating well with my group.
+
+\subsection{Yoon Kim}
+
+As we were a group for the Computing Topics project previously, we knew each other's work habits well and were able to set the deadlines accordingly. Everyone was prompt when certain tasks needed to be done by a specific time, and we all tried to help each other. The hardest part for me during this project was figuring out the idea behind on what I wanted to program. Once I had the idea in my head, it was not too difficult to code in C, but arriving to that position took especially a long time for the assembler.
+
+I think my strengths within the group included programming and sorting out how we can split the work amongst each other. My weakness was that I let out my stress and worries toward my group members a few times while working with them. Especially because I am good friends with my group members, I realised at some points throughout the project I let out my stress towards them when it was not really their fault. Everyone in my group understood and were really nice, but next time regardless of who I work with, I should not do that.
+
+\subsection{Diba Tavakolizadeh}
+
+Our group managed to build a really comfortable working environment and we were all open to any ideas and different point of views suggested by the other group members and we communicated really well. Our optimism pushed us through the difficulties that we faced and we managed to get through all of them.
+
+For the first few days, we started working together to get the idea of the spec and how to write the code. Then we worked individually. I had no prior experience in C nor any other programming languages before coming to Imperial. Therefore, I thought it would affect my work and I may not be able to perform as efficient as others. Fortunately, I figured out that this project did not involve complex coding and it was more of a problem-solving project. I realised that I was not confident enough to take more responsibility. However, in the period of 2 weeks, I gained more confidence and experience. Thus, in future group projects, I will actively try to take more initiative.
+
+
+\end{document}

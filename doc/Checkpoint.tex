@@ -1,0 +1,38 @@
+\documentclass[11pt]{article}
+
+%% Language and font encodings
+\usepackage[english]{babel}
+\usepackage[utf8x]{inputenc}
+\usepackage[T1]{fontenc}
+\usepackage{fullpage}
+
+\begin{document}
+
+\title{ARM Checkpoint}
+\author{Yoon Kim, Diba Tavakolizadeh, Jayati Sarkar and Inara Ramji}
+
+\maketitle
+
+\section{Work Delegation}
+
+As we were all unfamiliar with C, we thought it would be best for us to work together as a group for the first part. Therefore, we worked on all parts of the code for the emulator together with Yoon as the group leader. While debugging the code we worked in pairs as by this point we all felt confident in our understanding of the code. However, the bulk of the code was written as a group of four as we felt this was a more efficient way of coding while familiarising ourselves with C. We coordinated our work by constantly checking and updating each other on our progress and pushing regularly to git so we all knew what the other team members were doing at all times. We also used branching so that we could work on different parts of the code at the same time and then merge when necessary.
+
+\section{Group Dynamics}
+
+The group is working well as a whole as there has been good communication within the group and we are all contributing to the code as best we can. Everyone knows what each other member in the team is working on so we all know what is going on. For the later tasks we will try to split up the tasks among the group members so they are completed more quickly as after completing the emulator we have a better understanding of C and the project as a whole so feel more confident writing code individually or in pairs. We will also try and debug the code more as we go along so we are not left with a huge amount of code to debug at the end which will hopefully save time.
+
+\section{Structure of the Emulator}
+
+We implemented the three stage pipeline as a fetch-decode-execute cycle. The status of the pipeline was represented using an enum, where each field of the enum represented the current state of the pipeline. There are four states: execute, decode, clear pipeline and invalid. After initially decoding and executing the instructions in one large file, we decided to split up the four different instructions into their own files so the code was easier to read and debug.
+
+The four different instructions are therefore contained in their own file with a respective header file containing any required constants. Each header file also includes the utils.h file where we have included functions that are common to at least two of the instructions to avoid duplication of code and maintain a kind of code hierarchy. We created a struct for each instruction so that we could easily refer to different parts of the instruction in way that is easy to read and understand.
+
+After initially creating a separate memory struct that held a 32 bit array of 65536 elements and a separate registers struct that held a 32 bit array of 17 registers, we decided it would be better to make a combined struct of the memory and registers and make the memory byte-addressable instead of word-addressable. Therefore the final version of our code uses a struct containing a 8 bit memory array of 65536 elements and a 32 bit registers array of 17 elements.
+
+In terms of reusing code for the assembler, we think we will be able to use a number of functions implemented in our utils.c file in the assembler such as the function that gets the range of bits required or the rotate left/right functions. We also think we will be able to reuse our enums and preprocessors as they should be common to both parts of the project.
+
+\section{Future Tasks}
+
+Having read the specification for the assembler part of the project, we think that the more challenging aspects of the project will include deciding how best to represent the symbol table, as well deciding how the memory should be implemented and stored. We are working to mitigate this by reading ahead and already brainstorming ideas for the assembler, such as using a linked list for the memory. We have also begun thinking ahead about possible extensions that we think we would be able to implement within the given time so as to avoid wasting time closer to the deadline. Furthermore, by trying to finish the emulator as quickly as possible we are allowing ourselves the maximum time possible to complete the rest of the tasks to the highest standard possible.
+
+\end{document}
